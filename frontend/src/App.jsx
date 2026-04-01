@@ -26,6 +26,18 @@ function TodoItem({ todo, onToggle, onDelete, colorClass, dark, searchQuery }) {
     setTimeout(() => setChecking(false), 400);
   };
 
+  // 날짜 포맷
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return '방금 전';
+    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}일 전`;
+    return date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+  };
+
   // 검색어 하이라이팅
   const highlightText = (text, query) => {
     if (!query.trim()) return text;
@@ -66,11 +78,16 @@ function TodoItem({ todo, onToggle, onDelete, colorClass, dark, searchQuery }) {
         )}
       </button>
 
-      <span className={`flex-1 text-base font-medium transition-all duration-300 ${
-        todo.completed ? 'line-through text-gray-400' : dark ? 'text-gray-100' : 'text-gray-700'
-      }`}>
-        {highlightText(todo.title, searchQuery)}
-      </span>
+      <div className="flex-1 min-w-0">
+        <span className={`text-base font-medium transition-all duration-300 block ${
+          todo.completed ? 'line-through text-gray-400' : dark ? 'text-gray-100' : 'text-gray-700'
+        }`}>
+          {highlightText(todo.title, searchQuery)}
+        </span>
+        <span className="text-xs text-gray-400 mt-0.5 block">
+          {formatDate(todo.createdAt)}
+        </span>
+      </div>
 
       <button
         onClick={handleDelete}
