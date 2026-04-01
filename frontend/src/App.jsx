@@ -11,7 +11,7 @@ const COLORS = [
   'from-orange-400 to-amber-400',
 ];
 
-function TodoItem({ todo, onToggle, onDelete, colorClass, dark }) {
+function TodoItem({ todo, onToggle, onDelete, colorClass, dark, searchQuery }) {
   const [removing, setRemoving] = useState(false);
   const [checking, setChecking] = useState(false);
 
@@ -24,6 +24,17 @@ function TodoItem({ todo, onToggle, onDelete, colorClass, dark }) {
     setChecking(true);
     await onToggle(todo._id, todo.completed);
     setTimeout(() => setChecking(false), 400);
+  };
+
+  // 검색어 하이라이팅
+  const highlightText = (text, query) => {
+    if (!query.trim()) return text;
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return parts.map((part, i) =>
+      part.toLowerCase() === query.toLowerCase()
+        ? <mark key={i} className="bg-yellow-200 text-yellow-800 rounded px-0.5">{part}</mark>
+        : part
+    );
   };
 
   return (
@@ -58,7 +69,7 @@ function TodoItem({ todo, onToggle, onDelete, colorClass, dark }) {
       <span className={`flex-1 text-base font-medium transition-all duration-300 ${
         todo.completed ? 'line-through text-gray-400' : dark ? 'text-gray-100' : 'text-gray-700'
       }`}>
-        {todo.title}
+        {highlightText(todo.title, searchQuery)}
       </span>
 
       <button
@@ -76,6 +87,7 @@ function TodoItem({ todo, onToggle, onDelete, colorClass, dark }) {
 function App() {
   const [todos, setTodos] = useState([]);
   const [input, setInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
@@ -134,6 +146,11 @@ function App() {
     }
   };
 
+  // 검색 필터링
+  const filteredTodos = todos.filter(todo =>
+    todo.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const completedCount = todos.filter(t => t.completed).length;
   const progress = todos.length > 0 ? (completedCount / todos.length) * 100 : 0;
 
@@ -162,8 +179,6 @@ function App() {
                 Todo List
               </h1>
             </div>
-
-            {/* 다크모드 토글 버튼 */}
             <button
               onClick={() => setDark(!dark)}
               className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl transition-all duration-300 ${
@@ -205,7 +220,7 @@ function App() {
         )}
 
         {/* 입력 폼 */}
-        <form onSubmit={addTodo} className="flex gap-2 mb-6">
+        <form onSubmit={addTodo} className="flex gap-2 mb-4">
           <input
             ref={inputRef}
             type="text"
@@ -228,30 +243,64 @@ function App() {
           </button>
         </form>
 
+        {/* 검색창 */}
+        <div className="relative mb-6">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="할 일 검색..."
+            className={`w-full border rounded-2xl pl-10 pr-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 transition-all duration-200 placeholder-gray-300 ${
+              dark
+                ? 'bg-gray-700 border-gray-600 text-gray-100 focus:bg-gray-600'
+                : 'bg-gray-50 border-gray-200 text-gray-800 focus:bg-white'
+            }`}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
         {/* Todo 목록 */}
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block w-8 h-8 border-4 border-violet-300 border-t-violet-500 rounded-full animate-spin" />
             <p className="text-gray-400 text-sm mt-3">불러오는 중...</p>
           </div>
-        ) : todos.length === 0 ? (
+        ) : filteredTodos.length === 0 ? (
           <div className="text-center py-14">
-            <div className="text-5xl mb-3">🌈</div>
-            <p className={`text-sm font-medium ${dark ? 'text-gray-500' : 'text-gray-400'}`}>할 일을 추가해봐요!</p>
+            <div className="text-5xl mb-3">{searchQuery ? '🔍' : '🌈'}</div>
+            <p className={`text-sm font-medium ${dark ? 'text-gray-500' : 'text-gray-400'}`}>
+              {searchQuery ? `"${searchQuery}" 검색 결과가 없어요!` : '할 일을 추가해봐요!'}
+            </p>
           </div>
         ) : (
-          <ul className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-            {todos.map((todo, i) => (
-              <TodoItem
-                key={todo._id}
-                todo={todo}
-                onToggle={toggleTodo}
-                onDelete={deleteTodo}
-                colorClass={COLORS[i % COLORS.length]}
-                dark={dark}
-              />
-            ))}
-          </ul>
+          <>
+            {searchQuery && (
+              <p className="text-xs text-gray-400 mb-2 ml-1">
+                "{searchQuery}" 검색 결과 {filteredTodos.length}개
+              </p>
+            )}
+            <ul className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+              {filteredTodos.map((todo, i) => (
+                <TodoItem
+                  key={todo._id}
+                  todo={todo}
+                  onToggle={toggleTodo}
+                  onDelete={deleteTodo}
+                  colorClass={COLORS[i % COLORS.length]}
+                  dark={dark}
+                  searchQuery={searchQuery}
+                />
+              ))}
+            </ul>
+          </>
         )}
 
         {completedCount > 0 && (
