@@ -112,7 +112,3 @@ npm run dev
 
 ---
 
-## 📦 배포
-
-GitHub에 push하면 Vercel이 자동으로 재배포해요.  
-Vercel 환경변수에 `MONGODB_URI`와 `VITE_API_URL` 설정 필요.
