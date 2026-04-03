@@ -11,6 +11,67 @@ const COLORS = [
   'from-orange-400 to-amber-400',
 ];
 
+const GUIDE = [
+  { icon: '✏️', title: 'Todo 추가', desc: '상단 입력창에 할 일을 입력하고 추가 버튼을 누르세요. 최대 100자까지 입력 가능해요.' },
+  { icon: '✅', title: '완료 체크', desc: '동그라미 버튼을 클릭하면 완료 상태로 변경돼요. 다시 클릭하면 미완료로 돌아와요.' },
+  { icon: '🗑️', title: 'Todo 삭제', desc: '항목에 마우스를 올리면 오른쪽에 X 버튼이 나타나요. 클릭하면 삭제됩니다.' },
+  { icon: '🔍', title: '검색', desc: '검색창에 키워드를 입력하면 실시간으로 필터링돼요. 일치하는 글자는 노란색으로 표시돼요.' },
+  { icon: '📊', title: '진행률', desc: '전체 Todo 중 완료된 비율을 상단 진행 바로 확인할 수 있어요.' },
+  { icon: '🌙', title: '다크모드', desc: '우측 상단 달 버튼을 클릭하면 다크모드로 전환돼요. 설정은 자동으로 저장돼요.' },
+  { icon: '🧹', title: '일괄 삭제', desc: '완료된 항목이 있을 때 하단에 일괄 삭제 버튼이 나타나요.' },
+];
+
+function HelpModal({ dark, onClose }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.5)' }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ transition: 'all 0.2s', animation: 'modalIn 0.2s ease-out' }}
+        className={`w-full max-w-md rounded-3xl shadow-2xl p-6 border ${
+          dark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+        }`}
+      >
+        <style>{`@keyframes modalIn { from { opacity:0; transform:scale(0.92) } to { opacity:1; transform:scale(1) } }`}</style>
+
+        {/* 모달 헤더 */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">📖</span>
+            <h2 className={`text-xl font-black ${dark ? 'text-white' : 'text-gray-800'}`}>사용 설명서</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold transition-colors ${
+              dark ? 'bg-gray-700 hover:bg-gray-600 text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
+            }`}
+          >✕</button>
+        </div>
+
+        {/* 가이드 목록 */}
+        <ul className="space-y-3 max-h-96 overflow-y-auto pr-1">
+          {GUIDE.map((item, i) => (
+            <li key={i} className={`flex gap-3 p-3 rounded-2xl ${dark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+              <span className="text-xl flex-shrink-0 mt-0.5">{item.icon}</span>
+              <div>
+                <p className={`text-sm font-bold mb-0.5 ${dark ? 'text-gray-100' : 'text-gray-700'}`}>{item.title}</p>
+                <p className={`text-xs leading-relaxed ${dark ? 'text-gray-400' : 'text-gray-500'}`}>{item.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <p className={`text-center text-xs mt-4 ${dark ? 'text-gray-600' : 'text-gray-300'}`}>
+          화면 밖을 클릭하면 닫혀요
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function TodoItem({ todo, onToggle, onDelete, colorClass, dark, searchQuery }) {
   const [removing, setRemoving] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -26,7 +87,6 @@ function TodoItem({ todo, onToggle, onDelete, colorClass, dark, searchQuery }) {
     setTimeout(() => setChecking(false), 400);
   };
 
-  // 날짜 포맷
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -38,7 +98,6 @@ function TodoItem({ todo, onToggle, onDelete, colorClass, dark, searchQuery }) {
     return date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
   };
 
-  // 검색어 하이라이팅
   const highlightText = (text, query) => {
     if (!query.trim()) return text;
     const parts = text.split(new RegExp(`(${query})`, 'gi'));
@@ -61,7 +120,6 @@ function TodoItem({ todo, onToggle, onDelete, colorClass, dark, searchQuery }) {
       }`}
     >
       <div className={`w-3 h-3 rounded-full bg-gradient-to-br ${colorClass} flex-shrink-0`} />
-
       <button
         onClick={handleToggle}
         style={{ transition: 'transform 0.2s', transform: checking ? 'scale(1.3)' : 'scale(1)' }}
@@ -77,18 +135,14 @@ function TodoItem({ todo, onToggle, onDelete, colorClass, dark, searchQuery }) {
           </svg>
         )}
       </button>
-
       <div className="flex-1 min-w-0">
         <span className={`text-base font-medium transition-all duration-300 block ${
           todo.completed ? 'line-through text-gray-400' : dark ? 'text-gray-100' : 'text-gray-700'
         }`}>
           {highlightText(todo.title, searchQuery)}
         </span>
-        <span className="text-xs text-gray-400 mt-0.5 block">
-          {formatDate(todo.createdAt)}
-        </span>
+        <span className="text-xs text-gray-400 mt-0.5 block">{formatDate(todo.createdAt)}</span>
       </div>
-
       <button
         onClick={handleDelete}
         className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-full bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-500 flex items-center justify-center transition-all duration-200 flex-shrink-0"
@@ -109,11 +163,10 @@ function App() {
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
   const [dark, setDark] = useState(() => localStorage.getItem('darkMode') === 'true');
+  const [showHelp, setShowHelp] = useState(false);
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    localStorage.setItem('darkMode', dark);
-  }, [dark]);
+  useEffect(() => { localStorage.setItem('darkMode', dark); }, [dark]);
 
   const fetchTodos = async () => {
     try {
@@ -163,7 +216,6 @@ function App() {
     }
   };
 
-  // 검색 필터링
   const filteredTodos = todos.filter(todo =>
     todo.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -175,6 +227,8 @@ function App() {
     <div className={`min-h-screen transition-colors duration-500 ${
       dark ? 'bg-gray-900' : 'bg-gradient-to-br from-violet-100 via-pink-50 to-cyan-100'
     } flex items-center justify-center p-6`}>
+
+      {showHelp && <HelpModal dark={dark} onClose={() => setShowHelp(false)} />}
 
       {!dark && <>
         <div className="fixed top-10 left-10 w-32 h-32 bg-pink-200 rounded-full opacity-30 blur-3xl pointer-events-none" />
@@ -189,28 +243,28 @@ function App() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-400 to-pink-400 flex items-center justify-center text-xl shadow-md">
-                ✨
-              </div>
-              <h1 className="text-3xl font-black bg-gradient-to-r from-violet-500 to-pink-500 bg-clip-text text-transparent">
-                Todo List
-              </h1>
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-400 to-pink-400 flex items-center justify-center text-xl shadow-md">✨</div>
+              <h1 className="text-3xl font-black bg-gradient-to-r from-violet-500 to-pink-500 bg-clip-text text-transparent">Todo List</h1>
             </div>
-            <button
-              onClick={() => setDark(!dark)}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl transition-all duration-300 ${
-                dark
-                  ? 'bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-300'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-              }`}
-            >
-              {dark ? '☀️' : '🌙'}
-            </button>
+            <div className="flex items-center gap-2">
+              {/* 도움말 버튼 */}
+              <button
+                onClick={() => setShowHelp(true)}
+                className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                  dark ? 'bg-violet-400/20 hover:bg-violet-400/30 text-violet-300' : 'bg-violet-100 hover:bg-violet-200 text-violet-500'
+                }`}
+              >?</button>
+              {/* 다크모드 버튼 */}
+              <button
+                onClick={() => setDark(!dark)}
+                className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl transition-all duration-300 ${
+                  dark ? 'bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                }`}
+              >{dark ? '☀️' : '🌙'}</button>
+            </div>
           </div>
 
-          <p className="text-sm text-gray-400 ml-1 mt-1">
-            총 {todos.length}개 · 완료 {completedCount}개
-          </p>
+          <p className="text-sm text-gray-400 ml-1 mt-1">총 {todos.length}개 · 완료 {completedCount}개</p>
 
           {todos.length > 0 && (
             <div className="mt-4">
@@ -219,10 +273,7 @@ function App() {
                 <span>{Math.round(progress)}%</span>
               </div>
               <div className={`h-2 rounded-full overflow-hidden ${dark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                <div
-                  className="h-full bg-gradient-to-r from-violet-400 to-pink-400 rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${progress}%` }}
-                />
+                <div className="h-full bg-gradient-to-r from-violet-400 to-pink-400 rounded-full transition-all duration-700 ease-out" style={{ width: `${progress}%` }} />
               </div>
             </div>
           )}
@@ -245,9 +296,7 @@ function App() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="✏️  새로운 할 일을 입력해요..."
             className={`flex-1 border rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 transition-all duration-200 placeholder-gray-300 ${
-              dark
-                ? 'bg-gray-700 border-gray-600 text-gray-100 focus:bg-gray-600'
-                : 'bg-gray-50 border-gray-200 text-gray-800 focus:bg-white'
+              dark ? 'bg-gray-700 border-gray-600 text-gray-100 focus:bg-gray-600' : 'bg-gray-50 border-gray-200 text-gray-800 focus:bg-white'
             }`}
           />
           <button
@@ -255,9 +304,7 @@ function App() {
             disabled={!input.trim()}
             style={{ transition: 'all 0.2s', transform: adding ? 'scale(0.92)' : 'scale(1)' }}
             className="bg-gradient-to-r from-violet-500 to-pink-500 hover:from-violet-600 hover:to-pink-600 disabled:from-gray-300 disabled:to-gray-300 text-white px-6 py-3.5 rounded-2xl text-sm font-bold shadow-md hover:shadow-lg disabled:shadow-none transition-all duration-200"
-          >
-            추가
-          </button>
+          >추가</button>
         </form>
 
         {/* 검색창 */}
@@ -269,18 +316,11 @@ function App() {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="할 일 검색..."
             className={`w-full border rounded-2xl pl-10 pr-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 transition-all duration-200 placeholder-gray-300 ${
-              dark
-                ? 'bg-gray-700 border-gray-600 text-gray-100 focus:bg-gray-600'
-                : 'bg-gray-50 border-gray-200 text-gray-800 focus:bg-white'
+              dark ? 'bg-gray-700 border-gray-600 text-gray-100 focus:bg-gray-600' : 'bg-gray-50 border-gray-200 text-gray-800 focus:bg-white'
             }`}
           />
           {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold"
-            >
-              ✕
-            </button>
+            <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold">✕</button>
           )}
         </div>
 
@@ -299,11 +339,7 @@ function App() {
           </div>
         ) : (
           <>
-            {searchQuery && (
-              <p className="text-xs text-gray-400 mb-2 ml-1">
-                "{searchQuery}" 검색 결과 {filteredTodos.length}개
-              </p>
-            )}
+            {searchQuery && <p className="text-xs text-gray-400 mb-2 ml-1">"{searchQuery}" 검색 결과 {filteredTodos.length}개</p>}
             <ul className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
               {filteredTodos.map((todo, i) => (
                 <TodoItem
@@ -328,13 +364,10 @@ function App() {
               setTodos(todos.filter(t => !t.completed));
             }}
             className={`mt-5 w-full py-2.5 text-xs font-semibold rounded-2xl transition-all duration-200 border border-dashed ${
-              dark
-                ? 'text-gray-500 hover:text-red-400 bg-gray-700/50 hover:bg-red-900/20 border-gray-600 hover:border-red-800'
-                : 'text-gray-400 hover:text-red-400 bg-gray-50 hover:bg-red-50 border-gray-200 hover:border-red-200'
+              dark ? 'text-gray-500 hover:text-red-400 bg-gray-700/50 hover:bg-red-900/20 border-gray-600 hover:border-red-800'
+                   : 'text-gray-400 hover:text-red-400 bg-gray-50 hover:bg-red-50 border-gray-200 hover:border-red-200'
             }`}
-          >
-            🗑️ 완료된 항목 모두 삭제 ({completedCount}개)
-          </button>
+          >🗑️ 완료된 항목 모두 삭제 ({completedCount}개)</button>
         )}
       </div>
     </div>
