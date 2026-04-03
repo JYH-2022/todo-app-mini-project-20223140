@@ -12,9 +12,12 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB 연결 성공'))
   .catch(err => console.log('❌ MongoDB 연결 실패:', err));
 
+// 최대 제목 길이
+const MAX_TITLE_LENGTH = 100;
+
 // Todo 스키마 & 모델
 const todoSchema = new mongoose.Schema({
-  title: { type: String, required: true },
+  title: { type: String, required: true, maxlength: MAX_TITLE_LENGTH },
   completed: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
@@ -33,10 +36,16 @@ app.get('/api/todos', async (req, res) => {
 // POST - 새 Todo 추가
 app.post('/api/todos', async (req, res) => {
   try {
-    if (!req.body.title || req.body.title.trim() === '') {
+    const title = req.body.title?.trim();
+
+    if (!title) {
       return res.status(400).json({ error: '제목을 입력해주세요' });
     }
-    const newTodo = new Todo({ title: req.body.title.trim() });
+    if (title.length > MAX_TITLE_LENGTH) {
+      return res.status(400).json({ error: `제목은 ${MAX_TITLE_LENGTH}자 이하로 입력해주세요` });
+    }
+
+    const newTodo = new Todo({ title });
     await newTodo.save();
     res.status(201).json(newTodo);
   } catch (err) {
